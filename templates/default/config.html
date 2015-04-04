@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block head %}
+	<script type="text/javascript" src="{{ base_url }}/static/js/qrcode.js"></script>
+	<style type="text/css">
+		div.qrcode { position: absolute; visibility: hidden; }
+		div.qrcode#show { }
+	</style>
+{% end %}
+
+{% block body %}
+	<ul>
+		{% for item in items %}
+		<li>
+			<div class="server_info" id="server">server: {{ item[0]["server"] }}</div>
+			<div class="server_info" id="port">port: {{ item[0]["port"] }}</div>
+			<div class="server_info" id="password">password: {{ item[0]["password"] }}</div>
+			<div class="server_info" id="method">method: {{ item[0]["method"] }}</div>
+			<button type="button" onclick="show_qrcode('qrcode_{{ item[2] }}')">show qrcode</button>
+			<div class="qrcode" id="qrcode_{{ item[2] }}"></div>
+			<script type="text/javascript">
+				new QRCode("qrcode_{{ item[2]}}", "ss://{{ item[2] }}");
+
+				function show_qrcode(id) {
+					target = document.getElementById(id);
+					console.log("target.style.visibility=", target.style.visibility)
+					if (target.style.visibility == "") {
+						console.log('target.style.visibility == null')
+						target.style.visibility = "hidden"
+					}
+					if (target.style.visibility == "visible") {
+						target.style.visibility = "hidden";
+						console.log("target.style.visibility=", target.style.visibility)
+					} else if (target.style.visibility == "hidden") {
+						target.style.visibility = "visible";
+						console.log("target.style.visibility=", target.style.visibility)
+					}
+				}
+			</script>
+		</li>
+		{% end %}
+	</ul>
+{% end %}

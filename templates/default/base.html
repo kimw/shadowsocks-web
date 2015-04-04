@@ -1,0 +1,20 @@
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/> 
+		<title>Shadowsocks Web Interface</title>
+		{% block head %}{% end %}
+	</head>
+	<body>
+		<div id="body">
+			<div id="header">
+				<a href="{{ base_url }}/dashboard">Dashboard</a> |
+				<a href="{{ base_url }}/config">Config</a> |
+				<a href="{{ base_url }}/control">Control</a> |
+				<a href="{{ base_url }}/logout">Logout</a>
+			</div>
+			<div id="content">{% block body %}{% end %}</div>
+			<div id="time_now">@{{ datetime.datetime.utcnow() }}</div>
+	    {% block bottom %}{% end %}
+    </div>
+	</body>
+</html>

@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block body %}
+	{% if msg %}
+	<ul>
+		<li>name: {{ msg['name'] }}</li>
+		<li>state: {{ msg['state'] }}</li>
+		<li>uptime: {{ msg['uptime'] }}s</li>
+		<li>last start time: {{ msg['start'] }}</li>
+		<li>last stop time: {{ msg['stop'] }}</li>
+		<li>time now: {{ msg['now'] }}</li>
+	</ul>
+	{% else %}
+	<div>can't get any service message</div>
+	{% end %}
+{% end %}
