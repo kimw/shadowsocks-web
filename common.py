@@ -82,7 +82,7 @@ def load_shadowsocks_config(filename):
     return j
 
 
-def find_shadowsocks_config_file():
+def find_shadowsocks_config_file(deeply=False):
     """
     Find the shadowsocks config file in system.
 
@@ -93,7 +93,10 @@ def find_shadowsocks_config_file():
         4. /etc/shadowsocks.json
         5. /etc/shadowsocks/config.json
         6. /etc/shadowsocks-libev/config.json
-    And returns the first one met. Or, returns None while can't find any one.
+    And returns the first one met (deeply == False, by default) or all the
+    filenames that found (deeply == True).
+
+    If there's nothing found, it returns None.
     """
     check_list = [
         "./shadowsocks.json",
@@ -102,9 +105,17 @@ def find_shadowsocks_config_file():
         "/etc/shadowsocks.json",
         "/etc/shadowsocks/config.json",
         "/etc/shadowsocks-libev/config.json"]
-    for filename in check_list:
-        if os.path.isfile(filename):
-            return filename
+    if not deeply:
+        for filename in check_list:
+            if os.path.isfile(filename):
+                return filename
+    else:
+        config_files = []
+        for filename in check_list:
+            if os.path.isfile(filename):
+                config_files += [filename]
+        if config_files:
+            return config_files
     return None
 
 
