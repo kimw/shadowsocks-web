@@ -99,9 +99,9 @@ def find_shadowsocks_config_file(deeply=False):
     If there's nothing found, it returns None.
     """
     check_list = [
-        "./shadowsocks.json",
-        "~/shadowsocks.json",
-        "~/.shadowsocks.json",
+        os.path.abspath("shadowsocks.json"),
+        os.path.join(os.environ["HOME"], "shadowsocks.json"),
+        os.path.join(os.environ["HOME"], ".shadowsocks.json"),
         "/etc/shadowsocks.json",
         "/etc/shadowsocks/config.json",
         "/etc/shadowsocks-libev/config.json"]
