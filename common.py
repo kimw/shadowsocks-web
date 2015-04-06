@@ -79,6 +79,10 @@ def load_shadowsocks_config(filename):
                 j[item] = j[item].encode("utf8")
     if "port_password" not in j:
         j["port_password"] = None
+    if "workers" not in j:
+        j["workers"] = 1
+    if "user" not in j:
+        j["user"] = None
     return j
 
 

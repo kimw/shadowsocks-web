@@ -2,6 +2,59 @@
 
 {% block head %}
 	<script type="text/javascript" src="{{ base_url }}/static/js/qrcode.js"></script>
+	<script type="text/javascript">
+	function onEdit () {
+		for (var i = 0; i < document.querySelectorAll("INPUT").length; i++) {
+			if (document.querySelectorAll("INPUT")[i].type === "text") {
+				document.querySelectorAll("INPUT")[i].disabled = false;
+				console.log(document.querySelectorAll("INPUT")[i]);
+			};
+		};
+		document.getElementById("editButton").disabled = true;
+		document.getElementById("saveButton").disabled = false;
+		document.getElementById("cancelButton").disabled = false;
+	}
+
+	function onSave () {
+		if (checkValue()) {
+			document.getElementById("form1").submit();
+		} else {
+			alert("onSave()");
+		}
+	}
+
+	function onCancle () {
+		for (var i = 0; i < document.querySelectorAll("INPUT").length; i++) {
+			if (document.querySelectorAll("INPUT")[i].type === "text") {
+				document.querySelectorAll("INPUT")[i].disabled = true;
+				console.log(document.querySelectorAll("INPUT")[i]);
+			};
+		};
+		document.getElementById("editButton").disabled = false;
+		document.getElementById("saveButton").disabled = true;
+		document.getElementById("cancelButton").disabled = true;
+	}
+
+	function checkValue () {
+		return true;
+	}
+
+	function show_qrcode(id) {
+		target = document.getElementById(id);
+		console.log("target.style.visibility=", target.style.visibility)
+		if (target.style.visibility == "") {
+			console.log("target.style.visibility == null")
+			target.style.visibility = "hidden"
+		}
+		if (target.style.visibility == "visible") {
+			target.style.visibility = "hidden";
+			console.log("target.style.visibility=", target.style.visibility)
+		} else if (target.style.visibility == "hidden") {
+			target.style.visibility = "visible";
+			console.log("target.style.visibility=", target.style.visibility)
+		}
+	}
+	</script>
 	<style type="text/css">
 		div.qrcode { position: absolute; visibility: hidden; }
 		div.qrcode#show { }
@@ -9,35 +62,31 @@
 {% end %}
 
 {% block body %}
-	<ul>
-		{% for item in items %}
-		<li>
-			<div class="server_info" id="server">server: {{ item[0]["server"] }}</div>
-			<div class="server_info" id="port">port: {{ item[0]["port"] }}</div>
-			<div class="server_info" id="password">password: {{ item[0]["password"] }}</div>
-			<div class="server_info" id="method">method: {{ item[0]["method"] }}</div>
-			<button type="button" onclick="show_qrcode('qrcode_{{ item[2] }}')">show qrcode</button>
-			<div class="qrcode" id="qrcode_{{ item[2] }}"></div>
+	<!-- <ul> -->
+	<form action="" method="post" id="form1">
+		{% module xsrf_form_html() %}
+		<ul class="server_info" id="server">
+			<li class="server_info">Server: <input type="text" name="server" value="{{ items["server"] }}" disabled></li>
+			<li class="server_info">Method: <input type="text" name="method" value="{{ items["method"] }}" disabled></li>
+			<li class="server_info">Timeout: <input type="text" name="timeout" value="{{ items["timeout"] }}" disabled></li>
+			<li class="server_info">Workers: <input type="text" name="workers" value="{{ items["workers"] }}" disabled></li>
+		</ul>
+		{% for i in range(items["length"]) %}
+		<ul class="server_info" id="port_password">
+			<li class="server_info">Port: <input type="text" name="port" value="{{ items[i]["port_password"]["port"] }}" disabled></li>
+			<li class="server_info">Password: <input type="text" name="password" value="{{ items[i]["port_password"]["password"] }}" disabled></li>
+			<li class="server_info"><button type="button" onclick="show_qrcode('qrcode_{{ items[i]["uri_base64"] }}')">Show QRCode</button></li>
+			<div class="qrcode" id="qrcode_{{ items[i]["uri_base64"] }}"></div>
 			<script type="text/javascript">
-				new QRCode("qrcode_{{ item[2]}}", "ss://{{ item[2] }}");
-
-				function show_qrcode(id) {
-					target = document.getElementById(id);
-					console.log("target.style.visibility=", target.style.visibility)
-					if (target.style.visibility == "") {
-						console.log('target.style.visibility == null')
-						target.style.visibility = "hidden"
-					}
-					if (target.style.visibility == "visible") {
-						target.style.visibility = "hidden";
-						console.log("target.style.visibility=", target.style.visibility)
-					} else if (target.style.visibility == "hidden") {
-						target.style.visibility = "visible";
-						console.log("target.style.visibility=", target.style.visibility)
-					}
-				}
+				new QRCode("qrcode_{{ items[i]["uri_base64"] }}", "ss://{{ items[i]["uri_base64"] }}");
 			</script>
-		</li>
+		</ul>
 		{% end %}
-	</ul>
+		<ul id="command">
+			<button type="button" id="editButton" onclick="onEdit()">Edit</button>
+			<button type="button" id="saveButton" onclick="onSave()" disabled>Save</button>
+			<button type="reset" id="cancelButton" onclick="onCancle()" disabled>Cancel</button>
+		</ul>
+	</form>
+	<!-- </ul> -->
 {% end %}

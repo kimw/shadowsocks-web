@@ -11,6 +11,8 @@ import os
 import sys
 import logging
 import base64
+import pprint
+import json
 
 import userlib
 import common
@@ -34,12 +36,22 @@ define('base_url', type=str, default='', help='TODO: add description')
 
 class BaseHandler(tornado.web.RequestHandler):
     def initialize(self):
-        self.user = self.application.settings["user"]  # make it shorter
-        self.svservname = self.application.settings["svservname"]  # make it shorter
+        self.user = self.application.settings["user"]  # make the variable name shorter
 
     @property
     def config(self):
+        """Make the variable name shorter."""
         return self.application.config
+
+    @property
+    def config_filename(self):
+        """Make the variable name shorter."""
+        return self.application.config_filename
+
+    @property
+    def svservname(self):
+        """Make the variable name shorter."""
+        return self.application.settings["svservname"]
 
     def get_current_user(self):
         return self.get_secure_cookie("_t")
@@ -72,7 +84,6 @@ class LoginHandler(BaseHandler):
     def post(self):
         username = self.get_argument("username")
         password = self.get_argument("password")
-        print("username=%s, password=%s" % (username, password))
 
         if self.user.find(username=username, password=password):
             self.set_secure_cookie("_t", self.get_argument("username"))
@@ -80,8 +91,6 @@ class LoginHandler(BaseHandler):
             return
 
         # Create account by password in the config file while first time login.
-        print("self.user.count=", self.user.count)
-        print("password=%s, config[\"password\"]=%s" % (password, config["password"]))
         if (self.user.count == 0 and password == config["password"]):
             self.user.add(username, password)
             self.set_secure_cookie("_t", self.get_argument("username"))
@@ -118,70 +127,96 @@ class DashboardHandler(BaseHandler):
 class ConfigHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        items = []
-        if not self.config["port_password"]:
-            _config = {
-                "server": self.config["server"],
-                "port": self.config["server_port"],
-                # "password": self.config["password"].decode("utf-8"),
-                "password": self.config["password"],
-                "method": self.config["method"]
-            }
-            constr = "%s:%s@%s:%s" % (_config["method"], _config["password"],
-                _config["server"], _config["port"])
-            # b64str = base64.b64encode(constr.encode("utf-8")).decode("utf-8")
-            b64str = base64.b64encode(constr.encode("utf-8"))
-            items += [(_config, constr, b64str)]
+        def shorter(method, password, host, port):
+            uri = "%s:%s@%s:%s" % (method, password, host, port)
+            uri_base64 = base64.b64encode(uri.encode("utf-8")).decode("utf-8")
+            port_password = dict(port=port, password=password)
+            return port_password, uri, uri_base64
+
+        items = dict(server=self.config["server"], method=self.config["method"],
+            timeout=self.config["timeout"], workers=self.config["workers"])
+        if self.config["port_password"] is None:
+            items["length"] = 1
+            port_password, uri, uri_base64 = shorter(self.config["method"],
+                self.config["password"], self.config["server"],
+                self.config["server_port"])
+            items[0] = {"port_password": port_password, "uri": uri,
+                "uri_base64": uri_base64}
         else:
+            items["length"] = len(self.config["port_password"].items())
+            i = 0
             for port, password in self.config["port_password"].items():
-                _config = {
-                    "server": self.config["server"],
-                    "port": port,
-                    # "password": password.decode("utf-8"),
-                    "password": password,
-                    "method": self.config["method"]
-                }
-                constr = "%s:%s@%s:%s" % (_config["method"],
-                    _config["password"], _config["server"], _config["port"])
-                # b64str = base64.b64encode(constr.encode("utf-8")).decode("utf-8")
-                b64str = base64.b64encode(constr.encode("utf-8"))
-                items += [(_config, constr, b64str)]
+                port_password, uri, uri_base64 = shorter(self.config["method"],
+                    password, self.config["server"], port)
+                items[i] = {"port_password": port_password, "uri": uri,
+                    "uri_base64": uri_base64}
+                i += 1
         self.render("config.html", items=items)
+
+    @tornado.web.authenticated
+    def post(self):
+        config = dict()
+        config["server"] = self.get_argument("server")
+        config["method"] = self.get_argument("method")
+        config["timeout"] = int(self.get_argument("timeout"))
+        config["workers"] = int(self.get_argument("workers", 1))
+        config["port"] = self.get_arguments("port")
+        config["password"] = self.get_arguments("password")
+
+        # because of security reason, the `user` option must edit in cli.
+        # so, we just keep the original value of `user` from config file.
+        if self.config["user"] is not None:
+            config["user"] = self.config["user"]
+
+        if len(config["port"]) > 1:
+            _ = dict()
+            for i in range(len(config["port"])):
+                _[config["port"][i]] = config["password"][i]
+            config["port_password"] = _
+            del config["port"]
+            del config["password"]
+        else:
+            config["server_port"] = int(config["port"][0])
+            config["password"] = config["password"][0]
+            del config["port"]
+        # self.write("<pre>config=\n%s</pre>" % json.dumps(config, indent=4, sort_keys=True))
+
+        try:
+            with open(self.config_filename, "wt") as f:
+                json.dump(config, f, indent=4, sort_keys=True)
+        except PermissionError:
+            logging.error("Don't have the permission to write to config file '%s'." % self.config_filename)
+        self.write("Don't have the permission to write to config file '%s'." % self.config_filename)
+        self.application.config = common.load_shadowsocks_config(self.config_filename)
 
 
 class PlaneConfigHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        items = []
-        if not self.config["port_password"]:
-            _config = {
-                "server": self.config["server"],
-                "port": self.config["server_port"],
-                # "password": self.config["password"].decode("utf-8"),
-                "password": self.config["password"],
-                "method": self.config["method"]
-            }
-            constr = "%s:%s@%s:%s" % (_config["method"], _config["password"],
-                _config["server"], _config["port"])
-            # b64str = base64.b64encode(constr.encode("utf-8")).decode("utf-8")
-            b64str = base64.b64encode(constr.encode("utf-8"))
-            items += [(_config, constr, b64str)]
+        def shorter(method, password, host, port):
+            uri = "%s:%s@%s:%s" % (method, password, host, port)
+            uri_base64 = base64.b64encode(uri.encode("utf-8")).decode("utf-8")
+            port_password = dict(port=port, password=password)
+            return port_password, uri, uri_base64
+
+        items = dict(server=self.config["server"], method=self.config["method"])
+        if self.config["port_password"] is None:
+            items["length"] = 1
+            port_password, uri, uri_base64 = shorter(self.config["method"],
+                self.config["password"], self.config["server"],
+                self.config["server_port"])
+            items[0] = {"port_password": port_password, "uri": uri,
+                "uri_base64": uri_base64}
         else:
+            items["length"] = len(self.config["port_password"].items())
+            i = 0
             for port, password in self.config["port_password"].items():
-                _config = {
-                    "server": self.config["server"],
-                    "port": port,
-                    # "password": password.decode("utf-8"),
-                    "password": password,
-                    "method": self.config["method"]
-                }
-                constr = "%s:%s@%s:%s" % (_config["method"],
-                    _config["password"], _config["server"], _config["port"])
-                # b64str = base64.b64encode(constr.encode("utf-8")).decode("utf-8")
-                b64str = base64.b64encode(constr.encode("utf-8"))
-                items += [(_config, constr, b64str)]
-        from pprint import pformat
-        self.write('<pre>%s</pre>' % pformat(items))
+                port_password, uri, uri_base64 = shorter(self.config["method"],
+                    password, self.config["server"], port)
+                items[i] = {"port_password": port_password, "uri": uri,
+                    "uri_base64": uri_base64}
+                i += 1
+        self.write('<pre>%s</pre>' % pprint.pformat(items))
 
 
 class ServiceControlHandler(BaseHandler):
@@ -206,7 +241,7 @@ class ServiceControlHandler(BaseHandler):
             self.redirect("/")
 
 
-def main(config):
+def main(config, config_filename):
     if not options.cookie_secret:
         logging.warn('\n\n\t\t!!! WARNNING !!!\n\n'
               'You must specify the cookie_secret option. It should be a long '
@@ -254,14 +289,12 @@ def main(config):
 
     application = tornado.web.Application(handlers, **settings)
     application.config = config
+    application.config_filename = config_filename
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port, options.addr)
     print('shadowsocks-web start at %s:%s' % (options.addr, options.port))
     tornado.ioloop.IOLoop.instance().start()
 
-def start_with_config(config):
-    tornado.options.parse_command_line('')
-    main(config)
 
 if __name__ == "__main__":
     try:
@@ -292,7 +325,7 @@ if __name__ == "__main__":
             exit(1)
         print("Loading shadowsocks config file from '%s'" % ss_config_filename)
         config = common.load_shadowsocks_config(ss_config_filename)
-        main(config)
+        main(config, ss_config_filename)
 
     else:
         tornado.options.print_help()
