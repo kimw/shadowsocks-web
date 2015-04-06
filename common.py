@@ -7,6 +7,7 @@ import random
 import hmac
 import json
 import hashlib
+from colorama import Fore, Back, Style
 
 
 def hmacstr(key, msg, hashtype='sha256'):
@@ -122,5 +123,16 @@ def find_shadowsocks_config_file(deeply=False):
             return config_files
     return None
 
+
+def info(msg):
+    print(Fore.GREEN + msg + Fore.RESET)
+
+
+def warn(msg):
+    print(Fore.YELLOW + msg + Fore.RESET)
+
+
+def err(msg):
+    print(Fore.RED + msg + Fore.RESET)
 
 # vim: tw=78 ts=8 et sw=4 sts=4 fdm=indent

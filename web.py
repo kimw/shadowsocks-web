@@ -13,9 +13,11 @@ import logging
 import base64
 import pprint
 import json
+from colorama import Fore, Back, Style
 
 import userlib
 import common
+from common import info, warn, err
 from controller import SupervisorController
 
 
@@ -292,7 +294,7 @@ def main(config, config_filename):
     application.config_filename = config_filename
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port, options.addr)
-    print('shadowsocks-web start at %s:%s' % (options.addr, options.port))
+    info('shadowsocks-web start at %s:%s' % (options.addr, options.port))
     tornado.ioloop.IOLoop.instance().start()
 
 
@@ -305,10 +307,10 @@ if __name__ == "__main__":
     if len(sys.argv) == 2 and sys.argv[1] == "--hmac":
         key = common.randomstr()
         msg = common.randomstr()
-        print("HMAC-MD5    ( 32 bits): %s" % common.hmacstr(key, msg, "md5"))
-        print("HMAC-SHA224 ( 56 bits): %s" % common.hmacstr(key, msg, "sha224"))
-        print("HMAC-SHA256 ( 64 bits): %s" % common.hmacstr(key, msg, "sha256"))
-        print("HMAC-SHA512 (128 bits): %s" % common.hmacstr(key, msg, "sha512"))
+        print(Fore.GREEN + "HMAC-MD5    ( 32 bits):" + Fore.RESET + " %s" % common.hmacstr(key, msg, "md5"))
+        print(Fore.GREEN + "HMAC-SHA224 ( 56 bits):" + Fore.RESET + " %s" % common.hmacstr(key, msg, "sha224"))
+        print(Fore.GREEN + "HMAC-SHA256 ( 64 bits):" + Fore.RESET + " %s" % common.hmacstr(key, msg, "sha256"))
+        print(Fore.GREEN + "HMAC-SHA512 (128 bits):" + Fore.RESET + " %s" % common.hmacstr(key, msg, "sha512"))
 
     elif len(sys.argv) == 2 and sys.argv[1] == "--demo":
         options.debug = True
@@ -320,10 +322,10 @@ if __name__ == "__main__":
         options.base_url = r"/ssweb"
         ss_config_filename = common.find_shadowsocks_config_file()
         if ss_config_filename is None:
-            print("Can't find any shadowsocks config file. Are you sure there "
+            err("Can't find any shadowsocks config file. Are you sure there "
                   "installed shadowsocks already?")
             exit(1)
-        print("Loading shadowsocks config file from '%s'" % ss_config_filename)
+        info("Loading shadowsocks config file from '%s'" % ss_config_filename)
         config = common.load_shadowsocks_config(ss_config_filename)
         main(config, ss_config_filename)
 
