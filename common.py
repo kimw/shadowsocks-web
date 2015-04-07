@@ -69,21 +69,46 @@ def is_python3():
         return False
 
 
+def from_unicode_to_utf8(input):
+    """
+    Convert all unicode strings in the `input` into UTF-8.
+
+    Only support Python 2.x.
+    """
+    if is_python2():
+        if isinstance(input, dict):
+            return dict((from_unicode_to_utf8(key), from_unicode_to_utf8(value)) for key, value in input.iteritems())
+        elif isinstance(input, list):
+            return [from_unicode_to_utf8(element) for element in input]
+        elif isinstance(input, unicode):
+            return input.encode('utf8')
+        else:
+            return input
+    else:
+        raise NotImplementedError
+
+
 def load_shadowsocks_config(filename):
-    """Returns shadowsocks config in a list."""
+    """Returns shadowsocks config in a dictionary."""
     assert os.path.isfile(filename)
     with open(filename) as f:
         j = json.load(f)
-    for item in j:
-        if is_python2():
-            if isinstance(j[item], unicode):
-                j[item] = j[item].encode("utf8")
-    if "port_password" not in j:
-        j["port_password"] = None
-    if "workers" not in j:
-        j["workers"] = 1
-    if "user" not in j:
-        j["user"] = None
+    if is_python2():
+        j = from_unicode_to_utf8(j)
+    j.setdefault("port_password", None)
+    j.setdefault("workers", 1)
+    j.setdefault("user", None)
+    return j
+
+
+def load_config(filename):
+    """Returns shadowsocks-web config in a dictionary."""
+    assert os.path.isfile(filename)
+    with open(filename) as f:
+        j = json.load(f)
+    j = j.get("web", None)
+    if is_python2():
+        j = from_unicode_to_utf8(j)
     return j
 
 
@@ -124,15 +149,94 @@ def find_shadowsocks_config_file(deeply=False):
     return None
 
 
-def info(msg):
+def find_config_file(deeply=False):
+    """An alias of find_shadowsocks_config_file()."""
+    return find_shadowsocks_config_file(deeply)
+
+
+def moo():
+    s = ("\x20\x20\x20\x20\x20\x20\x20\x20\x20\x28\x5f\x5f\x29\x0a\x20\x20\x20"
+         "\x20\x20\x20\x20\x20\x20\x28\x1b\x5b\x33\x33\x6d\x6f\x6f\x1b\x5b\x33"
+         "\x39\x6d\x29\x0a\x20\x20\x20\x2f\x2d\x2d\x2d\x2d\x2d\x2d\x5c\x2f\x0a"
+         "\x20\x20\x2f\x20\x7c\x20\x20\x20\x20\x7c\x7c\x0a\x20\x1b\x5b\x33\x31"
+         "\x6d\x2a\x1b\x5b\x33\x39\x6d\x20\x20\x2f\x5c\x2d\x2d\x2d\x2f\x5c\x0a"
+         "\x20\x20\x20\x20\x1b\x5b\x33\x32\x6d\x7e\x7e\x20\x20\x20\x7e\x7e\x1b"
+         "\x5b\x33\x39\x6d\x0a\x2e\x2e\x2e\x2e\x22\x48\x61\x76\x65\x20\x79\x6f"
+         "\x75\x20\x6d\x6f\x6f\x65\x64\x20\x74\x6f\x64\x61\x79\x3f\x22\x2e\x2e"
+         "\x2e")
+    print(s)
+
+
+def is_ipaddress(address):
+    """
+    Check if 'address' is a valid IP4/IP6 address.
+    Returns True on valid, or False on not.
+
+    This procedure will raise a NotImplementedError exception on algorithm
+    error.
+    """
+    if is_python2():
+        import socket
+        # try IP4 address
+        try:
+            socket.inet_pton(socket.AF_INET, address)
+        except socket.error:
+            pass
+        else:
+            return True
+        # try IP6 address
+        try:
+            socket.inet_pton(socket.AF_INET6, address)
+        except socket.error:
+            return False
+        else:
+            return True
+
+        raise NotImplementedError  # should never reach this line
+    elif is_python3():
+        import ipaddress
+        try:
+            ipaddress.ip_address(address)
+        except ValueError:
+            return False
+        else:
+            return True
+
+        raise NotImplementedError  # should never reach this line
+    else:
+        raise NotImplementedError  # should never reach this line
+
+
+def is_valid_method(method):
+    """
+    Check if 'method' is a valid shadowsocks method.
+    Returns True on valid, or False on not.
+    """
+    valid_methods = ["aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ofb",
+        "aes-192-ofb", "aes-256-ofb", "aes-128-ctr", "aes-192-ctr",
+        "aes-256-ctr", "aes-128-cfb8", "aes-192-cfb8", "aes-256-cfb8",
+        "aes-128-cfb1", "aes-192-cfb1", "aes-256-cfb1", "bf-cfb",
+        "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "cast5-cfb",
+        "chacha20", "des-cfb", "idea-cfb", "rc2-cfb", "rc4", "rc4-md5",
+        "salsa20", "seed-cfb", "table"]
+    if method in valid_methods:
+        return True
+    return False
+
+
+def infoo(msg):
     print(Fore.GREEN + msg + Fore.RESET)
 
 
-def warn(msg):
+def warnn(msg):
     print(Fore.YELLOW + msg + Fore.RESET)
 
 
-def err(msg):
+def errr(msg):
     print(Fore.RED + msg + Fore.RESET)
+
+
+def debugg(msg):
+    print(Fore.BLACK + Style.BRIGHT + msg + Style.RESET_ALL)
 
 # vim: tw=78 ts=8 et sw=4 sts=4 fdm=indent

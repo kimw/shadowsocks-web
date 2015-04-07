@@ -19,7 +19,7 @@
 		if (checkValue()) {
 			document.getElementById("form1").submit();
 		} else {
-			alert("onSave()");
+			alert("there're mistakes in one or more of the values");
 		}
 	}
 
@@ -36,6 +36,48 @@
 	}
 
 	function checkValue () {
+		function isInteger (n) {
+			return !isNaN(n)
+		}
+
+		// TODO: check ip address
+		document.getElementById("server").value;
+
+		// check crypt method
+		valid_methods = ["aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
+			"aes-128-ofb", "aes-192-ofb", "aes-256-ofb", "aes-128-ctr",
+			"aes-192-ctr", "aes-256-ctr", "aes-128-cfb8", "aes-192-cfb8",
+			"aes-256-cfb8", "aes-128-cfb1", "aes-192-cfb1", "aes-256-cfb1",
+			"bf-cfb", "camellia-128-cfb", "camellia-192-cfb",
+			"camellia-256-cfb", "cast5-cfb", "chacha20", "des-cfb", "idea-cfb",
+			"rc2-cfb", "rc4", "rc4-md5", "salsa20", "seed-cfb", "table"]
+		if (valid_methods.indexOf(document.getElementById("method").value) == -1) {
+			console.log("wrong crypt method")
+			return false;
+		}
+
+		// timout is an integer, and not less than 300
+		v = document.getElementById("timeout").value
+		if (!isInteger(v) || v < 300) {
+			console.log("wrong timeout")
+			return false;
+		}
+
+		// workers is an integer, and not less than 1
+		v = document.getElementById("workers").value
+		if (!isInteger(v) || v < 1) {
+			console.log("wrong workers")
+			return false;
+		}
+
+		for (var i = 0; i < document.getElementsByName("port").length; i++) {
+			port = document.getElementsByName("port")[i].value;
+			if (!isInteger(port) || port > 65535) {
+				console.log("wrong port")
+				return false;
+			}
+		}
+
 		return true;
 	}
 
@@ -65,14 +107,14 @@
 	<!-- <ul> -->
 	<form action="" method="post" id="form1">
 		{% module xsrf_form_html() %}
-		<ul class="server_info" id="server">
-			<li class="server_info">Server: <input type="text" name="server" value="{{ items["server"] }}" disabled></li>
-			<li class="server_info">Method: <input type="text" name="method" value="{{ items["method"] }}" disabled></li>
-			<li class="server_info">Timeout: <input type="text" name="timeout" value="{{ items["timeout"] }}" disabled></li>
-			<li class="server_info">Workers: <input type="text" name="workers" value="{{ items["workers"] }}" disabled></li>
+		<ul class="server_info">
+			<li class="server_info">Server: <input type="text" id="server" name="server" value="{{ items["server"] }}" disabled></li>
+			<li class="server_info">Method: <input type="text" id="method" name="method" value="{{ items["method"] }}" disabled></li>
+			<li class="server_info">Timeout: <input type="text" id="timeout" name="timeout" value="{{ items["timeout"] }}" disabled></li>
+			<li class="server_info">Workers: <input type="text" id="workers" name="workers" value="{{ items["workers"] }}" disabled></li>
 		</ul>
 		{% for i in range(items["length"]) %}
-		<ul class="server_info" id="port_password">
+		<ul class="server_info">
 			<li class="server_info">Port: <input type="text" name="port" value="{{ items[i]["port_password"]["port"] }}" disabled></li>
 			<li class="server_info">Password: <input type="text" name="password" value="{{ items[i]["port_password"]["password"] }}" disabled></li>
 			<li class="server_info"><button type="button" onclick="show_qrcode('qrcode_{{ items[i]["uri_base64"] }}')">Show QRCode</button></li>
@@ -82,7 +124,7 @@
 			</script>
 		</ul>
 		{% end %}
-		<ul id="command">
+		<ul class="command">
 			<button type="button" id="editButton" onclick="onEdit()">Edit</button>
 			<button type="button" id="saveButton" onclick="onSave()" disabled>Save</button>
 			<button type="reset" id="cancelButton" onclick="onCancle()" disabled>Cancel</button>
