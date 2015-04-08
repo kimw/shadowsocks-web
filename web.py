@@ -32,7 +32,7 @@ define("cookie_secret", type=str, default=None,
             "random sequence of bytes to be used as the HMAC secret for the "
             "signature. You can create this HMAC string with --hmac option.")
 define("hmac", type=None, default=False, help="create a HMAC string")
-define("config", metavar="PATH", help="the config file")
+define("config", type=str, metavar="path", help="path to config file")
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -341,20 +341,42 @@ def start(demo=False):
             "--cookie_secret=" + cookie_secret, "--logging=debug"]
         options.parse_command_line(args)
     else:
-        # load options from config file, if the file exists.
-        config_file = common.find_config_file()
-        if config_file is not None:
-            config = common.load_config(config_file)
-            if config is not None:
-                infoo("Load config from file '%s'." % config_file)
-                args = [sys.argv[0]]
-                for item in config:
-                    args += ["--%s=%s" % (item, config[item])]
-                try:
-                    options.parse_command_line(args)
-                except tornado.options.Error:
-                    errr("Error on config file option.")
-                    sys.exit(1)
+        # pre-parse the command line options. it will be over write by 'load
+        # options from config file'. by then, it yet loaded.
+        options.parse_command_line()
+
+        if options.config is not None:
+            # load options from specified config file
+            if not os.path.isfile(options.config):
+                errr("Can't find config file '%s'." % options.config)
+                exit(1)
+            else:
+                config = common.load_config(options.config)
+                if config is not None:
+                    infoo("Load config from file '%s'." % options.config)
+                    args = [sys.argv[0]]
+                    for item in config:
+                        args += ["--%s=%s" % (item, config[item])]
+                    try:
+                        options.parse_command_line(args)
+                    except tornado.options.Error:
+                        errr("Error on config file option.")
+                        sys.exit(1)
+        else:
+            # load options from config file, if the file exists.
+            config_file = common.find_config_file()
+            if config_file is not None:
+                config = common.load_config(config_file)
+                if config is not None:
+                    infoo("Load config from file '%s'." % config_file)
+                    args = [sys.argv[0]]
+                    for item in config:
+                        args += ["--%s=%s" % (item, config[item])]
+                    try:
+                        options.parse_command_line(args)
+                    except tornado.options.Error:
+                        errr("Error on config file option.")
+                        sys.exit(1)
 
         # load options from command line
         try:
