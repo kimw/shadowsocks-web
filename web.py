@@ -116,9 +116,7 @@ class RootHandler(BaseHandler):
 class DashboardHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        # TODO: It's currently support Python 3 only.
-        #       Add python 2 support ASAP.
-        if common.is_python3():
+        if common.is_python3() or common.is_python2():
             msg = SupervisorController(self.svservname).get_info()
             self.render("dashboard.html", msg=msg)
         else:

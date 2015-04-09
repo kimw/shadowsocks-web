@@ -1,20 +1,25 @@
 # -*- coding: utf-8 -*-
 import os
 import datetime
-import http.client
+from common import is_python2, is_python3
 import socket
-import xmlrpc.client
+if is_python2():
+    from httplib import HTTPConnection
+    from xmlrpclib import Transport, ServerProxy, Fault
+elif is_python3():
+    from http.client import HTTPConnection
+    from xmlrpc.client import Transport, ServerProxy, Fault
 
 
 class SupervisorController(object):
     def __init__(self, servicename):
 
-        class UnixStreamHTTPConnection(http.client.HTTPConnection):
+        class UnixStreamHTTPConnection(HTTPConnection):
             def connect(self):
                 self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
                 self.sock.connect(self.host)
 
-        class UnixStreamTransport(xmlrpc.client.Transport, object):
+        class UnixStreamTransport(Transport, object):
             def __init__(self, socket_path):
                 self.socket_path = socket_path
                 super(UnixStreamTransport, self).__init__()
@@ -25,7 +30,7 @@ class SupervisorController(object):
         if not os.path.exists('/var/run/supervisor.sock'):
             raise RuntimeError('supervisor is not running.')
 
-        self.server = xmlrpc.client.ServerProxy(
+        self.server = ServerProxy(
             'http://',
             transport=UnixStreamTransport('/var/run/supervisor.sock'))
         self.servicename = servicename
@@ -47,27 +52,27 @@ class SupervisorController(object):
                 )
             if result['state'] == 'RUNNING':
                 result['uptime'] = result['epoch_now'] - result['epoch_start']
-        except xmlrpc.client.Fault:
+        except Fault:
             pass
         return result
 
     def start(self):
         try:
             self.server.supervisor.startProcess(self.servicename)
-        except xmlrpc.client.Fault:
+        except Fault:
             pass
 
     def stop(self):
         try:
             self.server.supervisor.stopProcess(self.servicename)
-        except xmlrpc.client.Fault:
+        except Fault:
             pass
 
     def restart(self):
         try:
             self.server.supervisor.stopProcess(self.servicename)
             self.server.supervisor.startProcess(self.servicename)
-        except xmlrpc.client.Fault:
+        except Fault:
             pass
 
 # vim: tw=78 ts=8 et sw=4 sts=4 fdm=indent
