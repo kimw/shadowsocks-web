@@ -159,7 +159,7 @@ class ConfigHandler(BaseHandler):
         config["method"] = self.get_argument("method")
         config["timeout"] = int(self.get_argument("timeout"))
         config["workers"] = int(self.get_argument("workers", 1))
-        config["port"] = int(self.get_arguments("port"))
+        config["port"] = self.get_arguments("port")
         config["password"] = self.get_arguments("password")
 
         # because of security reason, the `user` option must edit in cli.
@@ -170,18 +170,6 @@ class ConfigHandler(BaseHandler):
         # keep the original value of 'web' from config file
         if self.config["web"] is not None:
             config["web"] = self.config["web"]
-
-        if len(config["port"]) > 1:
-            _ = dict()
-            for i in range(len(config["port"])):
-                _[config["port"][i]] = config["password"][i]
-            config["port_password"] = _
-            del config["port"]
-            del config["password"]
-        else:
-            config["server_port"] = int(config["port"][0])
-            config["password"] = config["password"][0]
-            del config["port"]
 
         # check if the values in `config` are valid.
         # validating config["server"]
@@ -197,21 +185,34 @@ class ConfigHandler(BaseHandler):
         if config["workers"] < 1:
             raise ValueError
         # validating config["port"]
-        if config["port"] < 1 or config["port"] > 65535:
-            raise ValueError
+        for i in range(len(config["port"])):
+            if int(config["port"][i]) < 1 or int(config["port"][i]) > 65535:
+                raise ValueError
         # validating config["password"]
-        if config["password"] is None:
-            raise ValueError
+        for i in range(len(config["password"])):
+            if config["password"][i] is None:
+                raise ValueError
+
+        if len(config["port"]) > 1:
+            _ = dict()
+            for i in range(len(config["port"])):
+                _[config["port"][i]] = config["password"][i]
+            config["port_password"] = _
+            del config["port"]
+            del config["password"]
+        else:
+            config["server_port"] = int(config["port"][0])
+            config["password"] = config["password"][0]
+            del config["port"]
 
         try:
             with open(self.config_filename, "wt") as f:
                 json.dump(config, f, indent=4, sort_keys=True)
         except PermissionError:
-            logging.error("Don't have the permission to write config file '%s'."
-                % self.config_filename)
-            self.write("Don't have the permission to write config file '%s'."
-                % self.config_filename)
-            self.set_status(500)
+            msg = ("Don't have the permission to write config file '%s'."
+                    % self.config_filename)
+            logging.error(msg)
+            self.render("error.html", message=msg)
             return
         self.application.config = common.load_shadowsocks_config(
             self.config_filename)
@@ -268,6 +269,10 @@ class ServiceControlHandler(BaseHandler):
             self.redirect("/dashboard")
         else:
             self.redirect("/")
+
+
+if common.is_python2():
+    PermissionError = IOError
 
 
 def main(config, config_filename):

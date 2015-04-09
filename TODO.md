@@ -4,7 +4,7 @@ TODO
 - [x] parse shadowsocks json config file in run time.
 - [x] change shadowsocks json config file in run time.
 - [ ] change shadowsocks-web config file in run time.
-- [ ] need an error message html page.
+- [x] need an error message html page.
 - [ ] create default shadowsocks json config file in cli.
 - [ ] create shadowsocks-web config file in cli. (in json format? combine with the ss config file?)
 - [ ] ready to run in async mode?
