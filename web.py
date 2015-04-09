@@ -33,6 +33,7 @@ define("cookie_secret", type=str, default=None,
             "signature. You can create this HMAC string with --hmac option.")
 define("hmac", type=None, default=False, help="create a HMAC string")
 define("config", type=str, metavar="path", help="path to config file")
+define("theme", type=str, default="default", help="name of theme")
 
 
 class BaseHandler(tornado.web.RequestHandler):
@@ -275,7 +276,7 @@ if common.is_python2():
     PermissionError = IOError
 
 
-def main(config, config_filename):
+def start_tornado(config, config_filename):
     if not options.cookie_secret:
         logging.warn("\n\n\t\t!!! WARNNING !!!\n\n"
               "You must specify the cookie_secret option. It should be a long "
@@ -312,9 +313,9 @@ def main(config, config_filename):
     user.db_init()
     settings = dict(
         template_path=os.path.join(os.path.dirname(__file__),
-                                   "templates/default"),
+                                   "templates/" + options.theme),
         static_path=os.path.join(os.path.dirname(__file__),
-                                 "templates/default/assets"),
+                                 "templates/" + options.theme + "/assets"),
         static_url_prefix=options.base_url+"/static/",
         cookie_secret=options.cookie_secret,
         login_url="/login",
@@ -398,7 +399,7 @@ def start(demo=False):
         exit(1)
     config = common.load_shadowsocks_config(ss_config_filename)
     infoo("Loading shadowsocks config from file '%s'." % ss_config_filename)
-    main(config, ss_config_filename)
+    start_tornado(config, ss_config_filename)
 
 
 def print_hmac():

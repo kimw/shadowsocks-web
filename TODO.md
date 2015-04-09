@@ -8,4 +8,4 @@ TODO
 - [ ] create default shadowsocks json config file in cli.
 - [ ] create shadowsocks-web config file in cli. (in json format? combine with the ss config file?)
 - [ ] ready to run in async mode?
-- [ ] fully support template
+- [x] partly support theme
