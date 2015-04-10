@@ -9,3 +9,4 @@ TODO
 - [ ] create shadowsocks-web config file in cli. (in json format? combine with the ss config file?)
 - [ ] ready to run in async mode?
 - [x] partly support theme
+- [ ] choose a license
