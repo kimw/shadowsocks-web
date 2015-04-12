@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, with_statement
+from __future__ import absolute_import, division, print_function, \
+                       with_statement
 
 import tornado.httpserver
 import tornado.ioloop
@@ -36,9 +37,15 @@ define("config", type=str, metavar="path", help="path to config file")
 define("theme", type=str, default="default", help="name of theme")
 
 
+if common.is_python2():
+    PermissionError = IOError
+
+
 class BaseHandler(tornado.web.RequestHandler):
+
     def initialize(self):
-        self.user = self.application.settings["user"]  # make the variable name shorter
+        # make the variable name shorter
+        self.user = self.application.settings["user"]
 
     @property
     def config(self):
@@ -69,6 +76,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
 
 class LoginHandler(BaseHandler):
+
     def initialize(self):
         if self.request.method == "GET":
             self.first_time_login = True
@@ -78,8 +86,8 @@ class LoginHandler(BaseHandler):
 
     def get(self):
         if not self.get_current_user():
-            self.render("login.html", message=None,
-                    next=self.get_argument("next", "/"))
+            self.render("login.html",
+                        message=None, next=self.get_argument("next", "/"))
             return
         self.redirect("/")
 
@@ -99,22 +107,25 @@ class LoginHandler(BaseHandler):
             self.redirect(self.get_argument("next", "/"))
             return
 
-        self.render("login.html", message="login error",
-                next=self.get_argument("next", "/"))
+        self.render("login.html",
+                    message="login error", next=self.get_argument("next", "/"))
 
 
 class LogoutHandler(BaseHandler):
+
     def get(self):
         self.clear_all_cookies()
         self.redirect("/")
 
 
 class RootHandler(BaseHandler):
+
     def get(self):
         self.redirect("/dashboard")
 
 
 class DashboardHandler(BaseHandler):
+
     @tornado.web.authenticated
     def get(self):
         if common.is_python3() or common.is_python2():
@@ -125,6 +136,7 @@ class DashboardHandler(BaseHandler):
 
 
 class ConfigHandler(BaseHandler):
+
     @tornado.web.authenticated
     def get(self):
         def shorter(method, password, host, port):
@@ -133,23 +145,26 @@ class ConfigHandler(BaseHandler):
             port_password = dict(port=port, password=password)
             return port_password, uri, uri_base64
 
-        items = dict(server=self.config["server"], method=self.config["method"],
-            timeout=self.config["timeout"], workers=self.config["workers"])
+        items = dict(server=self.config["server"],
+                     method=self.config["method"],
+                     timeout=self.config["timeout"],
+                     workers=self.config["workers"])
         if self.config["port_password"] is None:
             items["length"] = 1
-            port_password, uri, uri_base64 = shorter(self.config["method"],
-                self.config["password"], self.config["server"],
-                self.config["server_port"])
+            _ = shorter(self.config["method"], self.config["password"],
+                        self.config["server"], self.config["server_port"])
+            port_password, uri, uri_base64 = _
             items[0] = {"port_password": port_password, "uri": uri,
-                "uri_base64": uri_base64}
+                        "uri_base64": uri_base64}
         else:
             items["length"] = len(self.config["port_password"].items())
             i = 0
             for port, password in self.config["port_password"].items():
-                port_password, uri, uri_base64 = shorter(self.config["method"],
-                    password, self.config["server"], port)
+                _ = shorter(self.config["method"], password,
+                            self.config["server"], port)
+                port_password, uri, uri_base64 = _
                 items[i] = {"port_password": port_password, "uri": uri,
-                    "uri_base64": uri_base64}
+                            "uri_base64": uri_base64}
                 i += 1
         self.render("config.html", items=items)
 
@@ -210,17 +225,18 @@ class ConfigHandler(BaseHandler):
             with open(self.config_filename, "wt") as f:
                 json.dump(config, f, indent=4, sort_keys=True)
         except PermissionError:
-            msg = ("Don't have the permission to write config file '%s'."
-                    % self.config_filename)
+            msg = ("Don't have the permission to write config file '%s'." %
+                   self.config_filename)
             logging.error(msg)
             self.render("error.html", message=msg)
             return
-        self.application.config = common.load_shadowsocks_config(
-            self.config_filename)
+        _ = common.load_shadowsocks_config(self.config_filename)
+        self.application.config = _
         self.redirect("/config")
 
 
 class PlaneConfigHandler(BaseHandler):
+
     @tornado.web.authenticated
     def get(self):
         def shorter(method, password, host, port):
@@ -229,28 +245,31 @@ class PlaneConfigHandler(BaseHandler):
             port_password = dict(port=port, password=password)
             return port_password, uri, uri_base64
 
-        items = dict(server=self.config["server"], method=self.config["method"])
+        items = dict(server=self.config["server"],
+                     method=self.config["method"])
         if self.config["port_password"] is None:
             items["length"] = 1
-            port_password, uri, uri_base64 = shorter(self.config["method"],
-                self.config["password"], self.config["server"],
-                self.config["server_port"])
+            _ = shorter(self.config["method"], self.config["password"],
+                        self.config["server"], self.config["server_port"])
+            port_password, uri, uri_base64 = _
             items[0] = {"port_password": port_password, "uri": uri,
-                "uri_base64": uri_base64}
+                        "uri_base64": uri_base64}
         else:
             items["length"] = len(self.config["port_password"].items())
             i = 0
             for port, password in self.config["port_password"].items():
-                port_password, uri, uri_base64 = shorter(self.config["method"],
-                    password, self.config["server"], port)
+                _ = shorter(self.config["method"], password,
+                            self.config["server"], port)
+                port_password, uri, uri_base64 = _
                 items[i] = {"port_password": port_password, "uri": uri,
-                    "uri_base64": uri_base64}
+                            "uri_base64": uri_base64}
                 i += 1
         common.moo()
         self.write("<pre>%s</pre>" % pprint.pformat(items))
 
 
 class ServiceControlHandler(BaseHandler):
+
     def initialize(self, action=None):
         self.action = action
         BaseHandler.initialize(self)
@@ -272,23 +291,20 @@ class ServiceControlHandler(BaseHandler):
             self.redirect("/")
 
 
-if common.is_python2():
-    PermissionError = IOError
-
-
 def start_tornado(config, config_filename):
     if not options.cookie_secret:
-        logging.warn("\n\n\t\t!!! WARNNING !!!\n\n"
-              "You must specify the cookie_secret option. It should be a long "
-              "random sequence of bytes to be used as the HMAC secret for the "
-              "signature.\n\n"
-              "To keep the Shadowsocks Web Interface runable as always it be, "
-              "it's signed by a random cookie_secret option. Yes, this chould "
-              "keep the service runable, but also effects the users have to "
-              "re-login every time the system administrator restart the "
-              "service or reboot the system. YOU ARE NOTICED.\n\n"
-              "You can create this HMAC string by typing following on server:\n"
-              "\t%s --hmac" % sys.argv[0])
+        logging.warn(
+            "\n\n\t\t!!! WARNNING !!!\n\n"
+            "You must specify the cookie_secret option. It should be a long "
+            "random sequence of bytes to be used as the HMAC secret for the "
+            "signature.\n\n"
+            "To keep the Shadowsocks Web Interface runable as always it be, "
+            "it's signed by a random cookie_secret option. Yes, this chould "
+            "keep the service runable, but also effects the users have to "
+            "re-login every time the system administrator restart the "
+            "service or reboot the system. YOU ARE NOTICED.\n\n"
+            "You can create this HMAC string by typing following on server:\n"
+            "\t%s --hmac" % sys.argv[0])
         options.cookie_secret = common.hmacstr(
             key=common.randomstr(1000),
             msg=common.randomstr(1000),
@@ -316,7 +332,7 @@ def start_tornado(config, config_filename):
                                    "templates/" + options.theme),
         static_path=os.path.join(os.path.dirname(__file__),
                                  "templates/" + options.theme + "/assets"),
-        static_url_prefix=options.base_url+"/static/",
+        static_url_prefix=options.base_url + "/static/",
         cookie_secret=options.cookie_secret,
         login_url="/login",
         xsrf_cookies=True,
@@ -341,8 +357,8 @@ def start(demo=False):
         # load demo options. it will escape config file.
         cookie_secret = common.hmacstr(common.randomstr(), common.randomstr())
         args = [sys.argv[0], "--debug", "--host=0.0.0.0", "--port=8080",
-            "--base_url=/ssweb", "--service_name=shadowsocks",
-            "--cookie_secret=" + cookie_secret, "--logging=debug"]
+                "--base_url=/ssweb", "--service_name=shadowsocks",
+                "--cookie_secret=" + cookie_secret, "--logging=debug"]
         options.parse_command_line(args)
     else:
         # pre-parse the command line options. it will be over write by 'load
@@ -389,7 +405,8 @@ def start(demo=False):
             errr("Error on command line option.")
             sys.exit(1)
     debugg("options: %s" % json.dumps(options.as_dict(), sort_keys=True))
-    logging.debug("options: %s" % json.dumps(options.as_dict(), sort_keys=True))
+    logging.debug("options: %s" %
+                  json.dumps(options.as_dict(), sort_keys=True))
 
     # load shadowsocks configuration
     ss_config_filename = common.find_shadowsocks_config_file()
@@ -405,14 +422,14 @@ def start(demo=False):
 def print_hmac():
     key = common.randomstr()
     msg = common.randomstr()
-    print((Fore.GREEN + "HMAC-MD5    ( 32 bits):" + Fore.RESET + " %s")
-        % common.hmacstr(key, msg, "md5"))
-    print((Fore.GREEN + "HMAC-SHA224 ( 56 bits):" + Fore.RESET + " %s")
-        % common.hmacstr(key, msg, "sha224"))
-    print((Fore.GREEN + "HMAC-SHA256 ( 64 bits):" + Fore.RESET + " %s")
-        % common.hmacstr(key, msg, "sha256"))
-    print((Fore.GREEN + "HMAC-SHA512 (128 bits):" + Fore.RESET + " %s")
-        % common.hmacstr(key, msg, "sha512"))
+    print((Fore.GREEN + "HMAC-MD5    ( 32 bits):" + Fore.RESET + " %s") %
+          common.hmacstr(key, msg, "md5"))
+    print((Fore.GREEN + "HMAC-SHA224 ( 56 bits):" + Fore.RESET + " %s") %
+          common.hmacstr(key, msg, "sha224"))
+    print((Fore.GREEN + "HMAC-SHA256 ( 64 bits):" + Fore.RESET + " %s") %
+          common.hmacstr(key, msg, "sha256"))
+    print((Fore.GREEN + "HMAC-SHA512 (128 bits):" + Fore.RESET + " %s") %
+          common.hmacstr(key, msg, "sha512"))
 
 
 if __name__ == "__main__":

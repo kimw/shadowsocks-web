@@ -12,6 +12,7 @@ elif is_python3():
 
 
 class SupervisorController(object):
+
     def __init__(self, servicename):
 
         class UnixStreamHTTPConnection(HTTPConnection):
@@ -40,16 +41,15 @@ class SupervisorController(object):
         try:
             r = self.server.supervisor.getProcessInfo(self.servicename)
             result = dict(
-                    name=r['name'],
-                    state=r['statename'],
-                    start=datetime.datetime.fromtimestamp(r['start']),
-                    epoch_start=r['start'],
-                    stop=datetime.datetime.fromtimestamp(r['stop']),
-                    epoch_stop=r['stop'],
-                    now=datetime.datetime.fromtimestamp(r['now']),
-                    epoch_now=r['now'],
-                    uptime='0',
-                )
+                name=r['name'],
+                state=r['statename'],
+                start=datetime.datetime.fromtimestamp(r['start']),
+                epoch_start=r['start'],
+                stop=datetime.datetime.fromtimestamp(r['stop']),
+                epoch_stop=r['stop'],
+                now=datetime.datetime.fromtimestamp(r['now']),
+                epoch_now=r['now'],
+                uptime='0')
             if result['state'] == 'RUNNING':
                 result['uptime'] = result['epoch_now'] - result['epoch_start']
         except Fault:

@@ -1,12 +1,15 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, with_statement
+from __future__ import absolute_import, division, print_function, \
+                       with_statement
 
 import sqlite3
 from hashlib import sha256
 
 
 class User(object):
+
     """docstring for user"""
+
     def __init__(self, dbfile):
         assert dbfile is not None
         self._conn = sqlite3.connect(dbfile)
@@ -24,7 +27,8 @@ class User(object):
         """Truncate the sqlite3 database."""
         self._conn.execute("DELETE FROM users")
         if reset_id:
-            self._conn.execute("UPDATE sqlite_sequence SET seq=0 WHERE name='users'")
+            sql = "UPDATE sqlite_sequence SET seq=0 WHERE name='users'"
+            self._conn.execute(sql)
         self._conn.execute("VACUUM")
         self._conn.commit()
 
@@ -110,31 +114,45 @@ class User(object):
         """
         # condition 1
         if id is None and username is not None and password is not None:
-            sql_fmt = "SELECT id FROM users WHERE username=? AND password=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE username=? AND password=?"
             sql_args = (username, password)
         # condition 2
         elif id is None and username is not None and password is None:
-            sql_fmt = "SELECT id FROM users WHERE username=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE username=?"
             sql_args = (username,)
         # condition 3
         elif id is None and username is None and password is not None:
-            sql_fmt = "SELECT id FROM users WHERE password=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE password=?"
             sql_args = (password,)
         # condition 4
         elif id is not None and password is not None and password is not None:
-            sql_fmt = "SELECT id FROM users WHERE id=? AND username=? AND password=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE id=? AND username=? AND password=?"
             sql_args = (id, username, password)
         # condition 5
         elif id is not None and username is not None and password is None:
-            sql_fmt = "SELECT id FROM users WHERE id=? AND username=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE id=? AND username=?"
             sql_args = (id, username)
         # condition 6
         elif id is not None and password is None and password is not None:
-            sql_fmt = "SELECT id FROM users WHERE id=? AND password=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE id=? AND password=?"
             sql_args = (id, password)
         # condition 7
         elif id is not None and password is None and password is None:
-            sql_fmt = "SELECT id FROM users WHERE id=?"
+            sql_fmt = "SELECT id \
+                       FROM users \
+                       WHERE id=?"
             sql_args = (id,)
         assert(sql_fmt is not None)
         assert(sql_args is not None)
@@ -158,11 +176,13 @@ class User(object):
 
     def dump(self, full=True):
         def make_header(maxlen_id, maxlen_username, maxlen_password):
-            fmt = "| {:^%s} | {:^%s} | {:^%s} |\n" % (max(2, maxlen_id),
-                    max(8, maxlen_username), max(8, maxlen_password))
+            fmt = "| {:^%s} | {:^%s} | {:^%s} |\n" % (
+                max(2, maxlen_id), max(8, maxlen_username),
+                max(8, maxlen_password))
             s = fmt.format("id", "username", "password")
-            fmt = "|-{:-^%s}-|-{:-^%s}-|-{:-^%s}-|" % (max(2, maxlen_id),
-                    max(8, maxlen_username), max(8, maxlen_password))
+            fmt = "|-{:-^%s}-|-{:-^%s}-|-{:-^%s}-|" % (
+                max(2, maxlen_id), max(8, maxlen_username),
+                max(8, maxlen_password))
             s += fmt.format("", "", "")
             return s
 
@@ -179,8 +199,9 @@ class User(object):
         else:
             retval = make_header(maxlen_id, maxlen_username, 19)
             for row in self._conn.execute(sql):
-                retval += "\n| %2s | %-8s | %8s |" % (row[0], row[1],
-                          row[2][:8] + "..." + row[2][len(row[2]) - 8:])
+                retval += "\n| %2s | %-8s | %8s |" % (
+                    row[0], row[1],
+                    row[2][:8] + "..." + row[2][len(row[2]) - 8:])
 
         return retval
 
@@ -221,9 +242,10 @@ def test():
     print("u.find(username=\"user3\")=", u.find(username="user3"))
     print("u.find(username=\"USER3\")=", u.find(username="USER3"))
     print("u.find(username=\"USER3\", password=\"password3\")=",
-        u.find(username="USER3", password="password3"))
+          u.find(username="USER3", password="password3"))
     print("u.find(username=\"USER3\", password=\"a new password\")=",
-        u.find(username="USER3", password="a new password"))
+          u.find(username="USER3", password="a new password"))
+
 
 if __name__ == "__main__":
     test()

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, with_statement
+from __future__ import absolute_import, division, print_function, \
+                       with_statement
 
 import sys
 import os
@@ -12,8 +13,8 @@ from colorama import Fore, Back, Style
 
 def hmacstr(key, msg, hashtype='sha256'):
     """
-    Returns HMAC string in specified hash type. Or raise NotImplementedError on
-    wrong type.
+    Returns HMAC string in specified hash type. Or raise
+    NotImplementedError on wrong type.
 
     The hash type chould be one of MD5, SHA224, SHA256 and SHA512.
 
@@ -41,8 +42,8 @@ def hmacstr(key, msg, hashtype='sha256'):
 
 def randomstr(leng=50):
     """
-    Returns specified length random string including letters both upper and
-    lower, and numbers.
+    Returns specified length random string including letters both upper
+    and lower, and numbers.
 
     By default, the length is 50.
     """
@@ -123,8 +124,8 @@ def find_shadowsocks_config_file(deeply=False):
         4. /etc/shadowsocks.json
         5. /etc/shadowsocks/config.json
         6. /etc/shadowsocks-libev/config.json
-    And returns the first one met (deeply == False, by default) or all the
-    filenames that found (deeply == True).
+    And returns the first one met (deeply == False, by default) or all
+    the filenames that found (deeply == True).
 
     If there's nothing found, it returns None.
     """
@@ -172,8 +173,8 @@ def is_ipaddress(address):
     Check if 'address' is a valid IP4/IP6 address.
     Returns True on valid, or False on not.
 
-    This procedure will raise a NotImplementedError exception on algorithm
-    error.
+    This procedure will raise a NotImplementedError exception on
+    algorithm error.
     """
     if is_python2():
         import socket
@@ -212,13 +213,15 @@ def is_valid_method(method):
     Check if 'method' is a valid shadowsocks method.
     Returns True on valid, or False on not.
     """
-    valid_methods = ["aes-128-cfb", "aes-192-cfb", "aes-256-cfb", "aes-128-ofb",
-        "aes-192-ofb", "aes-256-ofb", "aes-128-ctr", "aes-192-ctr",
-        "aes-256-ctr", "aes-128-cfb8", "aes-192-cfb8", "aes-256-cfb8",
-        "aes-128-cfb1", "aes-192-cfb1", "aes-256-cfb1", "bf-cfb",
-        "camellia-128-cfb", "camellia-192-cfb", "camellia-256-cfb", "cast5-cfb",
-        "chacha20", "des-cfb", "idea-cfb", "rc2-cfb", "rc4", "rc4-md5",
-        "salsa20", "seed-cfb", "table"]
+    valid_methods = ["aes-128-cfb", "aes-192-cfb", "aes-256-cfb",
+                     "aes-128-ofb", "aes-192-ofb", "aes-256-ofb",
+                     "aes-128-ctr", "aes-192-ctr", "aes-256-ctr",
+                     "aes-128-cfb8", "aes-192-cfb8", "aes-256-cfb8",
+                     "aes-128-cfb1", "aes-192-cfb1", "aes-256-cfb1", "bf-cfb",
+                     "camellia-128-cfb", "camellia-192-cfb",
+                     "camellia-256-cfb", "cast5-cfb", "chacha20", "des-cfb",
+                     "idea-cfb", "rc2-cfb", "rc4", "rc4-md5", "salsa20",
+                     "seed-cfb", "table"]
     if method in valid_methods:
         return True
     return False
