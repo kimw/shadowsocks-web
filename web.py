@@ -124,6 +124,15 @@ class RootHandler(BaseHandler):
         self.redirect("/dashboard")
 
 
+class RobotsHandler(BaseHandler):
+
+    def get(self):
+        s = ("User-agent: *\n"
+             "Disallow: " + options.base_url)
+        self.set_header("content-type", "text/plain; charset=UTF-8")
+        self.write(s)
+
+
 class DashboardHandler(BaseHandler):
 
     @tornado.web.authenticated
@@ -312,6 +321,7 @@ def start_tornado(config, config_filename):
 
     handlers = [
         (options.base_url + r"/", RootHandler),
+        (options.base_url + r"/robots.txt", RobotsHandler),
         (options.base_url + r"/dashboard", DashboardHandler),
         (options.base_url + r"/login", LoginHandler),
         (options.base_url + r"/logout", LogoutHandler),
