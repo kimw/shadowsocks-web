@@ -23,7 +23,7 @@ from controller import SupervisorController
 
 
 define("base_url", type=str, default="", help="the url prefix")
-define("host", type=str, default='localhost', help="run on the given host")
+define("host", type=str, default="localhost", help="run on the given host")
 define("port", type=int, default=8888, help="run on the given port")
 define("debug", type=bool, default=False, help="running in debug mode")
 define("service_name", type=str, default="shadowsocks",
@@ -101,7 +101,7 @@ class LoginHandler(BaseHandler):
             return
 
         # Create account by password in the config file while first time login.
-        if (self.user.count == 0 and password == config["password"]):
+        if (self.user.count == 0 and password == self.config["password"]):
             self.user.add(username, password)
             self.set_secure_cookie("_t", self.get_argument("username"))
             self.redirect(self.get_argument("next", "/"))
