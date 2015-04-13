@@ -11,3 +11,4 @@ TODO
 - [x] partly support theme
 - [ ] choose a license
 - [ ] document install guide
+- [ ] document theme guide
