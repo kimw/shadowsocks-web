@@ -33,6 +33,10 @@ define("cookie_secret", type=str, default=None,
             "random sequence of bytes to be used as the HMAC secret for the "
             "signature. You can create this HMAC string with --hmac option.")
 define("hmac", type=None, default=False, help="create a HMAC string")
+define("make_config", type=None, default=False,
+       help="create a shadowsocks-web config template")
+define("make_shadowsocks_config", type=None, default=False,
+       help="create a shadowsocks config template")
 define("config", type=str, metavar="path", help="path to config file")
 define("theme", type=str, default="default", help="name of theme")
 
@@ -447,6 +451,10 @@ if __name__ == "__main__":
         print_hmac()
     elif len(sys.argv) == 2 and sys.argv[1] == "--demo":
         start(demo=True)
+    elif len(sys.argv) == 2 and sys.argv[1] == "--make_config":
+        print(json.dumps(common.make_config(), indent=4))
+    elif len(sys.argv) == 2 and sys.argv[1] == "--make_shadowsocks_config":
+        print(json.dumps(common.make_shadowsocks_config(), indent=4))
     else:
         start()
 

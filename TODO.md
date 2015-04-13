@@ -1,12 +1,12 @@
 TODO
 ----
-- [ ] check if supervisor installed in run time.
+- [ ] check if supervisor is installed in run time.
 - [x] parse shadowsocks json config file in run time.
 - [x] change shadowsocks json config file in run time.
 - [ ] change shadowsocks-web config file in run time.
 - [x] need an error message html page.
-- [ ] create default shadowsocks json config file in cli.
-- [ ] create shadowsocks-web config file in cli. (in json format? combine with the ss config file?)
+- [x] create default shadowsocks json config file in cli.
+- [x] create shadowsocks-web config file in cli.
 - [ ] ready to run in async mode?
 - [x] partly support theme
 - [ ] choose a license
