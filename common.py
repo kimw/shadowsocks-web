@@ -227,16 +227,20 @@ def is_valid_method(method):
     return False
 
 
-def infoo(msg):
+def info_(msg):
     print(Fore.GREEN + msg + Fore.RESET)
 
 
-def warnn(msg):
+def warn_(msg):
     print(Fore.YELLOW + msg + Fore.RESET)
 
 
-def errr(msg):
+def err_(msg):
     print(Fore.RED + msg + Fore.RESET)
+
+
+def debug_(msg):
+    print(Fore.BLACK + Style.BRIGHT + msg + Style.RESET_ALL)
 
 
 def make_shadowsocks_config():
@@ -278,9 +282,5 @@ def make_config():
     }
     conf["web"] = sswebconf
     return conf
-
-
-def debugg(msg):
-    print(Fore.BLACK + Style.BRIGHT + msg + Style.RESET_ALL)
 
 # vim: tw=78 ts=8 et sw=4 sts=4 fdm=indent

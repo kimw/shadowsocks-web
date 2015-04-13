@@ -18,7 +18,7 @@ from colorama import Fore
 
 import userlib
 import common
-from common import infoo, warnn, errr, debugg
+from common import info_, warn_, err_, debug_
 from controller import SupervisorController
 
 
@@ -355,11 +355,11 @@ def start_tornado(config, config_filename):
     application.config_filename = config_filename
     http_server = tornado.httpserver.HTTPServer(application)
     http_server.listen(options.port, options.host)
-    infoo("shadowsocks-web start at %s:%s" % (options.host, options.port))
+    info_("shadowsocks-web start at %s:%s" % (options.host, options.port))
     try:
         tornado.ioloop.IOLoop.instance().start()
     except KeyboardInterrupt:
-        infoo("shadowsocksweb is stoped.")
+        info_("shadowsocksweb is stoped.")
 
 
 def start(demo=False):
@@ -378,19 +378,19 @@ def start(demo=False):
         if options.config is not None:
             # load options from specified config file
             if not os.path.isfile(options.config):
-                errr("Can't find config file '%s'." % options.config)
+                err_("Can't find config file '%s'." % options.config)
                 exit(1)
             else:
                 config = common.load_config(options.config)
                 if config is not None:
-                    infoo("Load config from file '%s'." % options.config)
+                    info_("Load config from file '%s'." % options.config)
                     args = [sys.argv[0]]
                     for item in config:
                         args += ["--%s=%s" % (item, config[item])]
                     try:
                         options.parse_command_line(args)
                     except tornado.options.Error:
-                        errr("Error on config file option.")
+                        err_("Error on config file option.")
                         sys.exit(1)
         else:
             # load options from config file, if the file exists.
@@ -398,34 +398,34 @@ def start(demo=False):
             if config_file is not None:
                 config = common.load_config(config_file)
                 if config is not None:
-                    infoo("Load config from file '%s'." % config_file)
+                    info_("Load config from file '%s'." % config_file)
                     args = [sys.argv[0]]
                     for item in config:
                         args += ["--%s=%s" % (item, config[item])]
                     try:
                         options.parse_command_line(args)
                     except tornado.options.Error:
-                        errr("Error on config file option.")
+                        err_("Error on config file option.")
                         sys.exit(1)
 
         # load options from command line
         try:
             options.parse_command_line()
         except tornado.options.Error:
-            errr("Error on command line option.")
+            err_("Error on command line option.")
             sys.exit(1)
-    debugg("options: %s" % json.dumps(options.as_dict(), sort_keys=True))
+    debug_("options: %s" % json.dumps(options.as_dict(), sort_keys=True))
     logging.debug("options: %s" %
                   json.dumps(options.as_dict(), sort_keys=True))
 
     # load shadowsocks configuration
     ss_config_filename = common.find_shadowsocks_config_file()
     if ss_config_filename is None:
-        errr("Can't find any shadowsocks config file. Are you sure there "
+        err_("Can't find any shadowsocks config file. Are you sure there "
              "installed shadowsocks already?")
         exit(1)
     config = common.load_shadowsocks_config(ss_config_filename)
-    infoo("Loading shadowsocks config from file '%s'." % ss_config_filename)
+    info_("Loading shadowsocks config from file '%s'." % ss_config_filename)
     start_tornado(config, ss_config_filename)
 
 
