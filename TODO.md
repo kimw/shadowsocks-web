@@ -10,3 +10,4 @@ TODO
 - [ ] ready to run in async mode?
 - [x] partly support theme
 - [ ] choose a license
+- [ ] document install guide
