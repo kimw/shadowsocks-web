@@ -282,6 +282,9 @@ def make_config():
     else:
         with open(find_config_file()) as f:
             conf = json.load(f)
+    if not conf.has_key("password"):
+        # keep the 'password' valid for sure the default login password
+        conf["password"] = randomstr(20)
     sswebconf = {
         "base_url": "/ssweb",
         "cookie_secret": hmacstr(randomstr(), randomstr()),

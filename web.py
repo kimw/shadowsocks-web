@@ -452,9 +452,12 @@ if __name__ == "__main__":
     elif len(sys.argv) == 2 and sys.argv[1] == "--demo":
         start(demo=True)
     elif len(sys.argv) == 2 and sys.argv[1] == "--make-config":
-        print(json.dumps(common.make_config(), indent=4))
+        s = json.dumps(common.make_config(), indent=4, sort_keys=True)
+        print(s)
     elif len(sys.argv) == 2 and sys.argv[1] == "--make-shadowsocks-config":
-        print(json.dumps(common.make_shadowsocks_config(), indent=4))
+        s = json.dumps(common.make_shadowsocks_config(), indent=4,
+                       sort_keys=True)
+        print(s)
     else:
         start()
 
