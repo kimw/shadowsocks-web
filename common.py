@@ -239,6 +239,47 @@ def errr(msg):
     print(Fore.RED + msg + Fore.RESET)
 
 
+def make_shadowsocks_config():
+    """
+    Returns a default shadowsocks config file as dict.
+
+    Do *NOT* use this config file in production! It's *NOT* secure!
+
+    Acturly, this function is designed for make a shadowsocks config
+    template, and the program which used this function should prompt
+    user to change the configurations immediately.
+    """
+    conf = {
+        "method": "aes-256-cfb",
+        "password": randomstr(20),
+        "server": "0.0.0.0",
+        "server_port": 8388,
+        "timeout": 300,
+        "workers": 1,
+    }
+    return conf
+
+
+def make_config():
+    """
+    Returns a default shadowsocks web config file as dict.
+
+    Do *NOT* use this config file in production! It's *NOT* secure!
+
+    Acturly, this function is designed for make a config template, and
+    the program which used this function should prompt user to change
+    the configurations immediately.
+    """
+    conf = make_shadowsocks_config()
+    sswebconf = {
+        "base_url": "/ssweb",
+        "cookie_secret": hmacstr(randomstr(), randomstr()),
+        "service_name": "shadowsocks"
+    }
+    conf["web"] = sswebconf
+    return conf
+
+
 def debugg(msg):
     print(Fore.BLACK + Style.BRIGHT + msg + Style.RESET_ALL)
 
