@@ -268,13 +268,20 @@ def make_config():
     """
     Returns a default shadowsocks web config file as dict.
 
+    This function will try hard to find out the shadowsocks config file,
+    and load it. Or, make a default shadowsocks config with not found.
+
     Do *NOT* use this config file in production! It's *NOT* secure!
 
     Acturly, this function is designed for make a config template, and
     the program which used this function should prompt user to change
     the configurations immediately.
     """
-    conf = make_shadowsocks_config()
+    if find_config_file() is None:
+        conf = make_shadowsocks_config()
+    else:
+        with open(find_config_file()) as f:
+            conf = json.load(f)
     sswebconf = {
         "base_url": "/ssweb",
         "cookie_secret": hmacstr(randomstr(), randomstr()),
