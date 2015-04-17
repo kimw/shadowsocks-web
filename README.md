@@ -1,46 +1,63 @@
 shadowsocks-web
 ===============
 
-shadowsocks-web (or you can say ssweb) is a shadowsocks web interface, which can:
+shadowsocks-web (or you can say ssweb) is a shadowsocks web interface,
+which can:
 
 1. stat shadowsocks run time information
 2. controll shadowsocks (start / stop / restart)
 3. manage the shadowsocks configurations, and config file
 4. display shadowsocks qrcode for easier mobile sufering.
 
-currently, shadowsocks-web implement the goals above by supervisor unix sock.
-it may control shadowsocks directly sometimes in the furture.
+Currently, shadowsocks-web implement the goals above by supervisor unix
+sock. It may control shadowsocks directly sometimes in the furture.
 
 
 LICENSE
 -------
-The license is still in choosing. But you can use it as free.
+The license is still in choosing.  But you can use it as free.
 
 
 INSTALL
 -------
 
-###install supervisor
+For keep the shadowsocks-web run up well, the supervisor, shadowsocks, and nginx is needed.
+In this guide, we will install the applications above and shadowsocsk-web it-self step by step.
+In this guide, I assume that you have a ubuntu box, and use `apt-get` to install applications what we need.
+If you have a box with different system, just replace this command as you need. (e.g., yum in centos)
 
-```sh
+
+###Install supervisor
+
+supervisor is a service runner.
+It helps us to keep shadowsocks and shadowsocks-web run in back as a daemon.
+On ubuntu box, you can install supervisor by command:
+
+```shell
 sudo apt-get install supervisor
 ```
 
-set up your supervisor as follow.
+By default, the ubuntu installed supervisor run as root.
+As you known, it's not safe.
+So, I deside to set up a new user named as 'supervisor' and user group 'supervisor', and keep application running under it's permission by following commands.
 
-```sh
+```shell
 sudo addgroup --system supervisor
 sudo adduser --system --shell /bin/false --ingroup supervisor --disabled-password --disabled-login supervisor
 sudo chown -R supervisor.supervisor /var/log/supervisor
 ```
 
-update the supervisor configurations as:
+The default supervisord config file have some secure insurece.
+You can make some modification to take care of this issue ;-)
+All modifications are one change and one add.
+1. Change the 'chmod' option in '[unix_http_server]' section to 0660 insdeed of default 0700.
+2. Add a new 'chown' option in the same section as in the sample following:
 
 ```
 [unix_http_server]
 file=/var/run/supervisor.sock
-chmod=0660
-chown=supervisor:supervisor
+chmod=0660                    ; the default chmod=0700, we changed this option into 0660
+chown=supervisor:supervisor   ; superviosor will run as user 'supervisor' and under 'supervisor' group
 
 [supervisord]
 logfile=/var/log/supervisor/supervisord.log
@@ -59,31 +76,47 @@ files=/etc/supervisor/conf.d/*.conf
 ```
 
 
-###install shadowsocks
+###Install shadowsocks
+
+After the supervisor installation completed, we should start to install shadowsocks.
+If you have installed shadowsocks already, you can take a flush sight at this section.
+Make sure your shadowsocks has the same configurations, if you deside to keep up follow me with this guide.
+
+Of cause, we should install shadowsocks as first.
 
 ```sh
 sudo pip install shadowsocks
 ```
+
+Because some destribution dose not installed python-pip (a.k.a pip) by default, you may get 'command not found: python-pip' error sometimes.
+If you get this error, try to install python-pip (a.k.a pip) before going.
+
+Limit application running under a specified user is allways a good idea.
+So, we'll create a new user and user group as the same name 'shadowsocks' as follow.
+If you've installed shadowsocks by your own, and did not care about this issue, you'd better update it yourself.
 
 ```sh
 sudo addgroup --system shadowsocks
 sudo adduser --system --shell /bin/false --ingroup shadowsocks --disabled-password --disabled-login shadowsocks
 ```
 
-'/etc/supervisor/conf.d/shadowsocks.conf'
+If you want your shadowsocks run as a daemon by supervisor, you could create a supervisor config file as follow.
+This file should pathed as '/etc/supervisor/conf.d/shadowsocks.conf', if you follow me from the start of this guide. Or desided by yourself, if you didn't.
 
 ```
+; '/etc/supervisor/conf.d/shadowsocks.conf'
+
 [program:shadowsocks]
 command=/usr/local/bin/ssserver -c /etc/shadowsocks.json
 directory=/home/shadowsocks
-autostart=false
+autostart=true
 redirect_stderr=true
 stdout_logfile=/var/log/supervisor/shadowsocks.log
 stderr_logfile=/var/log/supervisor/shadowsocks-err.log
 ```
 
 
-###install shadowsocks-web
+###Install shadowsocks-web
 
 set up your shadowsocks and shadowsocks-web as follow.
 
@@ -123,17 +156,31 @@ stderr_logfile=/var/log/supervisor/ssweb-stderr.log
 environment=HOME=/home/shadowsocks-web
 ```
 
-###Restart supervisor
+Now we restart the supervisor service.
 
 ```sh
 sudo service supervisor restart
 ```
 
 
+###Install nginx
+
+Because of secure reason, we'd better use the nginx face to internet and hide
+shadowsocks-web behind it.
+
+TODO: add docs here.
+
+
+###Check
+
+Now you can open any browser that you favorite, and type
+http://x.x.x.x:8888/ssweb.
+
+
 UNINSTALL
 ---------
 
-###uninstall shadowsocks-web
+###Uninstall shadowsocks-web
 
 ```sh
 sudo supervisorctl stop shadowsocks-web
@@ -147,7 +194,7 @@ sudo rm -rf /home/shadowsocks-web
 ```
 
 
-###uninstall shadowsocks
+###Uninstall shadowsocks
 
 ```sh
 sudo supervisorctl stop shadowsocks
@@ -163,7 +210,7 @@ sudo rm -rf /home/shadowsocks
 ```
 
 
-###uninstall supervisor
+###Uninstall supervisor
 
 ```sh
 sudo apt-get remove supervisor
@@ -176,6 +223,10 @@ sudo deluser supervisor
 sudo delgroup supervisor
 sudo rm -rf /home/supervisor
 ```
+
+###Uninstall nginx
+
+TODO: add docs here.
 
 
 CONFIG
